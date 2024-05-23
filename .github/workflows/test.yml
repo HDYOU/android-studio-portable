@@ -33,10 +33,18 @@ jobs:
             exit 1
           fi
           
-          online_version=$(curl https://developer.android.google.cn/studio?hl=zh-cn | grep "windows.exe" | grep "android-studio-20" | head -1 | awk -F 'android-studio-' 'NR==1 {print $2}' | awk -F '-windows' 'NR==1 {print $1}' | sed 's/ //g')
+          result=$(curl https://developer.android.google.cn/studio?hl=zh-cn)
+          online_version=$( echo $result | grep "windows.exe" | grep "android-studio-20" | head -1 | awk -F 'android-studio-' 'NR==1 {print $2}' | awk -F '-windows' 'NR==1 {print $1}' | sed 's/ //g')
           echo "online_version: $online_version"
+
+          download_url=$(echo $result | grep "android-studio-20" | grep "windows" | grep "zip" | grep "http" | head -1 | awk -F '" ' 'NR==1 {print $2}')
+          echo "download_url: $download_url"
           if [ -z "$online_version" ]; then
             echo "online_version is null"
+            exit 1
+          fi
+          if [ -z "$download_url" ]; then
+            echo "download_url is null"
             exit 1
           fi
 
@@ -46,6 +54,8 @@ jobs:
           fi
 
           sed -i "s/$cur_version/$online_version/g" build.properties
+
+          sed -i "s#atf.win64.url = .+#atf.win64.url = $download_url#g" build.properties
 
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
