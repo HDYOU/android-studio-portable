@@ -1,0 +1,70 @@
+name: test
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+  watch:
+    types: [ started ]
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - '.github/workflows/test.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone Repo
+        uses: actions/checkout@main
+
+      - name: Check Version
+        run: |
+          cur_version=$(cat build.properties | grep "app.version" | head -1 | awk -F '=' 'NR==1 {print $2}' | sed 's/ //g')
+          echo "cur_version: $cur_version"
+          if [ -z "$cur_version" ]; then
+            echo "cur_version is null"
+            exit 1
+          fi
+          
+          online_version=$(curl https://developer.android.google.cn/studio?hl=zh-cn | grep "windows.exe" | grep "android-studio-20" | head -1 | awk -F 'android-studio-' 'NR==1 {print $2}' | awk -F '-windows' 'NR==1 {print $1}' | sed 's/ //g')
+          echo "online_version: $online_version"
+          if [ -z "$online_version" ]; then
+            echo "online_version is null"
+            exit 1
+          fi
+
+          if [ "$cur_version" = "$online_version" ]; then
+            echo "Not update !"
+            exit 0
+          fi
+
+          sed -i "s/$cur_version/$online_version/g" build.properties
+
+          git add build.properties
+          git commit -m "update android studio version to $online_version"
+          git push -f
+
+          echo "NEW_VERSION=$online_version" >> $GITHUB_ENV
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        if: env.NEW_VERSION != ""
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          name: Build ${{ env.NEW_VERSION }}
+          body: |
+            ### Commits
+            Build With Android Studio ${{ env.NEW_VERSION }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
