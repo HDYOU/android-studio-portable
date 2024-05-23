@@ -54,6 +54,9 @@ jobs:
           git add build.properties
           git commit -m "update android studio version to $online_version"
           git push -f
+          tag_name="v$online_version"
+          git tag -a "$tag_name" -m "update android studio version to $online_version"
+          git push origin "$tag_name"
 
           echo "NEW_VERSION=$online_version" >> $GITHUB_ENV
 
