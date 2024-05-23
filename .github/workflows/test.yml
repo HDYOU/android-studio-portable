@@ -56,7 +56,7 @@ jobs:
 
           sed -i "s/$cur_version/$online_version/g" build.properties
 
-          sed -i "s#atf.win64.url = .+#atf.win64.url = $download_url#g" build.properties
+          sed -i "s#atf.win64.url = .*#atf.win64.url = $download_url#g" build.properties
 
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
