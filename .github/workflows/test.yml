@@ -48,6 +48,9 @@ jobs:
 
           sed -i "s/$cur_version/$online_version/g" build.properties
 
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          
           git add build.properties
           git commit -m "update android studio version to $online_version"
           git push -f
