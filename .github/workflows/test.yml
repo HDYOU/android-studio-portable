@@ -34,10 +34,10 @@ jobs:
           fi
           
           result=$(curl https://developer.android.google.cn/studio?hl=zh-cn)
-          online_version=$( echo $result | grep "windows.exe" | grep "android-studio-20" | head -1 | awk -F 'android-studio-' 'NR==1 {print $2}' | awk -F '-windows' 'NR==1 {print $1}' | sed 's/ //g')
+          online_version=`echo $result | grep "windows.exe" | grep "android-studio-20" | head -1 | awk -F 'android-studio-' 'NR==1 {print $2}' | awk -F '-windows' 'NR==1 {print $1}' | sed 's/ //g'`
           echo "online_version: $online_version"
 
-          download_url=$(echo $result | grep "android-studio-20" | grep "windows" | grep "zip" | grep "http" | head -1 | awk -F '" ' 'NR==1 {print $2}')
+          download_url=`echo $result | grep "android-studio-20" | grep "windows" | grep "zip" | grep "http" | head -1 | awk -F '" ' 'NR==1 {print $2}'`
           echo "download_url: $download_url"
           if [ -z "$online_version" ]; then
             echo "online_version is null"
