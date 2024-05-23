@@ -1,7 +1,6 @@
 name: test
 
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
       ssh:
@@ -60,29 +59,25 @@ jobs:
 
           echo "NEW_VERSION=$online_version" >> $GITHUB_ENV
 
-      # - name: Create release
-      #   uses: softprops/action-gh-release@v2
-      #   if: ${{ env.NEW_VERSION }}
-      #   with:
-      #     tag_name: v${{ env.NEW_VERSION }}
-      #     name: Build ${{ env.NEW_VERSION }}
-      #     body: |
-      #       ### Commits
-      #       Build With Android Studio ${{ env.NEW_VERSION }}
-      #     draft: false
-      #     prerelease: false
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        if: ${{ env.NEW_VERSION }}
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          name: Build ${{ env.NEW_VERSION }}
+          body: |
+            ### Commits
+            Build With Android Studio ${{ env.NEW_VERSION }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Bump version and push tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create a GitHub release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.tag_version.outputs.new_tag }}
-          name: Release ${{ steps.tag_version.outputs.new_tag }}
-          body: ${{ steps.tag_version.outputs.changelog }}
+      - name: Check dispatches
+        if: ${{ env.NEW_VERSION }}
+        run: |
+          curl -X POST https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            --data '{"ref": "refs/tags/v${{ env.NEW_VERSION }}", "event_type": "dispatches ping build", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
 
