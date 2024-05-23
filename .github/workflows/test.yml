@@ -56,7 +56,7 @@ jobs:
 
       - name: Create release
         uses: softprops/action-gh-release@v2
-        if: env.NEW_VERSION != ""
+        if: ${{ env.NEW_VERSION != "" }}
         with:
           tag_name: v${{ env.NEW_VERSION }}
           name: Build ${{ env.NEW_VERSION }}
