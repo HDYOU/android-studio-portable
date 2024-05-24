@@ -58,8 +58,13 @@ jobs:
 
           sed -i "s/$cur_version/$online_version/g" build.properties
 
-          sed -i "/atf.win64.url/d" build.properties
-          echo "atf.win64.url = $download_url" >> build.properties
+          sed -ri "s#(atf.win64.url = )[^\n]*#atf.win64.url = $download_url#g" build.properties
+          #echo "atf.win64.url = $download_url" >> build.properties
+          match=$( grep "$download_url" build.properties )
+          if [ -z "$match" ];then
+             echo "Not repalce download_url !"
+             exit 1
+          fi
 
           cat build.properties
 
