@@ -17,6 +17,29 @@ on:
       - main
     paths:
       - '.github/workflows/test.yml'
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+  watch:
+    types: [ started ]
+  push:
+    branches:
+      - master
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/BuildPreview.yml'
+
+      # only one run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true  # true false
 
 jobs:
   build:
@@ -25,6 +48,8 @@ jobs:
     steps:
       - name: Clone Repo
         uses: actions/checkout@main
+        with:
+          fetch-depth: 0
 
       - name: Check Version
         run: |
@@ -78,23 +103,35 @@ jobs:
             fi
           }
 
+          #########  update download url
           echo ""
           find_txt="atf.win64.url"
           find_val_by_conf "$find_txt"
           echo "find_val: $find_txt = $find_val"
-          
+
           new_replace_val="$download_url"
           echo "new_replace_val: $find_txt = $new_replace_val"
           repalce_data "$find_txt" "$new_replace_val"
           echo ""
 
-
+          #########  update release version
           echo ""
           find_txt="app.release"
           find_val_by_conf "$find_txt"
           echo "find_val: $find_txt = $find_val"
 
           new_replace_val=$(($find_val + 1))
+          echo "new_replace_val: $find_txt = $new_replace_val"
+          repalce_data "$find_txt" "$new_replace_val"
+          echo ""
+
+          #########  update papp.url
+          echo ""
+          find_txt="papp.url"
+          find_val_by_conf "$find_txt"
+          echo "find_val: $find_txt = $find_val"
+
+          new_replace_val="https://github.com/${{ github.repository }}"
           echo "new_replace_val: $find_txt = $new_replace_val"
           repalce_data "$find_txt" "$new_replace_val"
           echo ""
@@ -113,9 +150,11 @@ jobs:
           git add build.properties
           git commit -m "update android studio version to $online_version"
           git push -f
-          #tag_name="v$online_version"
+          tag_name="v$online_version"
           #git tag -a "$tag_name" -m "update android studio version to $online_version"
-          #git push origin "$tag_name"
+          #git push origin "refs/tags/$tag_name"
+
+          git push origin --delete "refs/tags/$tag_name"
 
           echo "NEW_VERSION=$online_version" >> $GITHUB_ENV
 
