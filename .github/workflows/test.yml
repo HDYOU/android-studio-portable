@@ -17,24 +17,6 @@ on:
       - main
     paths:
       - '.github/workflows/test.yml'
-on:
-  repository_dispatch:
-  workflow_dispatch:
-    inputs:
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
-        default: 'false'
-  watch:
-    types: [ started ]
-  push:
-    branches:
-      - master
-      - main
-    paths-ignore:
-      - '**.md'
-      - '.github/**'
-      - '!.github/workflows/BuildPreview.yml'
 
       # only one run
 concurrency:
