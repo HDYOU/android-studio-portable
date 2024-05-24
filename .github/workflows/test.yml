@@ -51,21 +51,60 @@ jobs:
           fi
           rm -f tmp_tmp.txt
 
+          
+
+          sed -i "s/$cur_version/$online_version/g" build.properties
+
+          find_val=""
+          find_val_by_conf(){
+            find_txt="$1"
+            find_val=""
+            find_val=$( cat build.properties | grep "$find_txt" | head -1 | awk -F '=' 'NR==1 {print $2}' | sed 's/ //g' )
+            if [ -z "$find_val" ]; then
+              echo "$find_txt is null"
+              exit 1
+            fi
+          }
+
+          repalce_data(){
+            find_txt="$1"
+            new_replace_val="$2"
+            replace_txt="$find_txt = $new_replace_val"
+            sed -ri "s#($find_txt\s*=\s*)[^\n]*#$replace_txt#g" build.properties
+            match=$( grep "$replace_txt" build.properties )
+            if [ -z "$match" ];then
+              echo "Not repalce '$find_txt' !"
+              exit 1
+            fi
+          }
+
+          echo ""
+          find_txt="atf.win64.url"
+          find_val_by_conf "$find_txt"
+          echo "find_val: $find_txt = $find_val"
+          
+          new_replace_val="$download_url"
+          echo "new_replace_val: $find_txt = $new_replace_val"
+          repalce_data "$find_txt" "$new_replace_val"
+          echo ""
+
+
+          echo ""
+          find_txt="app.release"
+          find_val_by_conf "$find_txt"
+          echo "find_val: $find_txt = $find_val"
+
+          new_replace_val=$(($find_val + 1))
+          echo "new_replace_val: $find_txt = $new_replace_val"
+          repalce_data "$find_txt" "$new_replace_val"
+          echo ""
+
+
+
           if [ "$cur_version" = "$online_version" ]; then
             echo "Not update !"
             exit 0
           fi
-
-          sed -i "s/$cur_version/$online_version/g" build.properties
-
-          sed -ri "s#(atf.win64.url = )[^\n]*#atf.win64.url = $download_url#g" build.properties
-          #echo "atf.win64.url = $download_url" >> build.properties
-          match=$( grep "$download_url" build.properties )
-          if [ -z "$match" ];then
-             echo "Not repalce download_url !"
-             exit 1
-          fi
-
           cat build.properties
 
           git config --local user.name "GitHub Action"
